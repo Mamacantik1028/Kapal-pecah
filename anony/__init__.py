@@ -17,23 +17,20 @@ logger = logging.getLogger(__name__)
 class Pyro(Client):
     def __init__(self):
         super().__init__(
-            name="StringSession",
-            api_id=6,
-            api_hash="eb06d4abfb49dc3eeb1aeb98ae0f581e",
-            lang_code="en",
+            name="SessionBot",
+            api_id=config.API_ID,
+            api_hash=config.API_HASH,
             bot_token=config.BOT_TOKEN,
             parse_mode=enums.ParseMode.HTML,
-            link_preview_options=types.LinkPreviewOptions(is_disabled=True)
+            link_preview_options=types.LinkPreviewOptions(
+                is_disabled=True,
+            )
         )
         self.OWNER = config.OWNER_ID
 
     async def _start(self):
         await super().start()
-        self.id = self.me.id
-        self.name = self.me.first_name
-        self.username = self.me.username
-        self.mention = self.me.mention
-        logger.info(f"@{self.username} started.")
+        logger.info(f"@{self.me.username} started.")
 
     async def _stop(self):
         await super().stop()
@@ -42,7 +39,7 @@ class Pyro(Client):
 
 app = Pyro()
 
-from convopyro import Conversation
+from conv import Conversation
 Conversation(app)
 
 from anony.database import Database

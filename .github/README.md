@@ -63,16 +63,15 @@
   <summary><b>Need Help?</b></summary>
   <ul>
     <li><a href="https://t.me/DevilsHeavenMF">Support Chat</a></li>
-    <li><a href="https://t.me/DevilsHeavenMF">Support Channel</a></li>
+    <li><a href="https://t.me/fallenx">Updates Channel</a></li>
   </ul>
 </details>
 
+<hr>
+
 <details>
-  <summary><b>Credits</b></summary>
+  <summary><b>LICENSE</b></summary>
   <ul>
-    <li><a href="https://github.com/AnonymousX1025">Me</a></li>
-    <li><a href="https://github.com/pyrogram/pyrogram">Dan</a></li>
-    <li><a href="https://github.com/LonamiWebs/Telethon">Lonami</a></li>
-    <li><a href="https://github.com/AnonymousX1025/StringGenBot/graphs/contributors">All Contributors</a></li>
+    <a href=LICENSE>MIT</a>
   </ul>
 </details>

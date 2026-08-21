@@ -1,10 +1,26 @@
+import signal
 import asyncio
 import importlib
 
-from pyrogram import idle
-
 from anony import app, db, logger
 from anony.modules import all_modules
+
+
+async def idle():
+    loop = asyncio.get_running_loop()
+    stop_event = asyncio.Event()
+
+    try:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(sig, stop_event.set)
+    except NotImplementedError:
+        def handler(sig, frame):
+            loop.call_soon_threadsafe(stop_event.set)
+
+        signal.signal(signal.SIGINT, handler)
+        signal.signal(signal.SIGTERM, handler)
+
+    await stop_event.wait()
 
 
 async def anony_boot():
@@ -14,9 +30,11 @@ async def anony_boot():
         raise RuntimeError(ex)
     await db.connect()
 
-    for module in all_modules:
+    imported = [
         importlib.import_module(f"anony.modules.{module}")
-    logger.info(f"Loaded {len(all_modules)} modules.")
+        for module in all_modules()
+    ]
+    logger.info(f"Loaded {len(imported)} modules.")
 
     await idle()
     await app._stop()
@@ -24,5 +42,10 @@ async def anony_boot():
 
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(anony_boot())
-    logger.info("Stopping String Gen Bot...")
+    try:
+        asyncio.run(anony_boot())
+    except KeyboardInterrupt:
+        pass
+    except Exception as ex:
+        logger.error(f"Error occurred: {ex}")
+    logger.info("Stopping...")

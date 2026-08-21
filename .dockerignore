@@ -1,8 +1,11 @@
 .env
 *.log
 .git/
+venv/
+.venv/
+__pycache__/
+log.txt
 Procfile
 README.md
 .gitignore
 runtime.txt
-__pycache__/

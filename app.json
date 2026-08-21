@@ -1,7 +1,7 @@
 {
     "name": "String Gen Bot",
     "description": "A Telegram Bot to generate Telethon and Pyrogram String Session.",
-    "logo": "https://telegra.ph/file/654ddaf472f18b799600b.jpg",
+    "logo": "https://files.catbox.moe/0l2iiy.jpg",
     "keywords": [
         "python3",
         "telegram",
@@ -13,6 +13,16 @@
     ],
     "repository": "https://github.com/AnonymousX1025/StringGenBot",
     "env": {
+      "API_ID": {
+        "description": "Get this value from https://my.telegram.org/apps",
+        "value": "",
+        "required": true
+      },
+      "API_HASH": {
+        "description": "Get this value from https://my.telegram.org/apps",
+        "value": "",
+        "required": true
+      },
       "BOT_TOKEN": {
         "description": "Get this value from @BotFather on telegram",
         "value": "",

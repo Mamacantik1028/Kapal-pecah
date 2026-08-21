@@ -104,7 +104,7 @@ async def _gen_session(_, cq: types.CallbackQuery):
                 link_preview_options=types.LinkPreviewOptions(is_disabled=True),
             )
             try:
-                await client.join_chat("FallenAssociation")
+                await client.join_chat("fallenx")
             except:
                 pass
         else:
@@ -116,13 +116,13 @@ async def _gen_session(_, cq: types.CallbackQuery):
                 parse_mode="html",
             )
             try:
-                await client(JoinChannelRequest("@FallenAssociation"))
+                await client(JoinChannelRequest("@fallenx"))
             except:
                 pass
     except KeyError:
         pass
     try:
         await client.disconnect()
-        await cq.message.reply_text(f"Successfully generated your {sgen} string session.\n\nPlease check your saved messages for getting it.\n\nA string generator bot by <a href={SUPPORT_CHAT}>Fallen Association</a>.", reply_markup=buttons.pm_key(cq.from_user.id))
+        await cq.message.reply_text(f"Successfully generated your {sgen} string session.\n\nPlease check your saved messages for getting it.\n\nA string generator bot by <a href={SUPPORT_CHAT}>FallenX</a>.", reply_markup=buttons.pm_key(cq.from_user.id))
     except:
         pass

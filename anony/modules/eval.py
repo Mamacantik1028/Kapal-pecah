@@ -6,77 +6,77 @@ import uuid
 import asyncio
 import traceback
 
-from meval import meval
 from html import escape
 from pyrogram import filters, types
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from anony import app
-
-def format_exception(exc: BaseException, tb: Optional[List[traceback.FrameSummary]] = None) -> str:
-    """Format an exception's traceback as a string."""
-    tb = tb or traceback.extract_tb(exc.__traceback__)
-    cwd = os.getcwd()
-    for frame in tb:
-        if cwd in frame.filename:
-            frame.filename = os.path.relpath(frame.filename)
-    stack = "".join(traceback.format_list(tb))
-    return f"Traceback (most recent call last):\n{stack}{type(exc).__name__}: {exc}"
+from anony.utils import meval, format_exception
 
 
-async def run_eval(message: types.Message, code: str) -> Tuple[str, str]:
-    out_buf = io.StringIO()
-
-    async def send(*args: Any, **kwargs: Any) -> types.Message:
-        return await message.reply_text(*args, **kwargs)
-
-    def _print(*args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault("file", out_buf)
-        print(*args, **kwargs)
-
-    eval_vars = {
-        "m": message,
-        "app": app,
-        "client": app,
-        "reply": message.reply_to_message,
-        "chat": message.chat,
-        "user": message.from_user,
-        "ikb": types.InlineKeyboardButton,
-        "ikm": types.InlineKeyboardMarkup,
-        "asyncio": asyncio,
-        "pyrogram": sys.modules["pyrogram"],
-        "send": send,
-        "print": _print,
-        "os": os,
-        "re": re,
-        "sys": sys,
-        "traceback": traceback,
-    }
-
-    try:
-        result = await meval(code, globals(), **eval_vars)
-        return "", str(result)
-    except Exception as exc:
-        tb = traceback.extract_tb(exc.__traceback__)
-        tb = tb[next((i for i, f in enumerate(tb) if f.filename == "<string>"), 0):]
-        return "⚠️ Error executing snippet\n\n", format_exception(exc, tb)
-
-
-@app.on_message(filters.command("eval") & filters.user(app.OWNER))
-@app.on_edited_message(filters.command("eval") & filters.user(app.OWNER))
+@app.on_message(filters.command(["eval", "exec"]) & filters.user(app.OWNER))
+@app.on_edited_message(filters.command(["eval", "exec"]) & filters.user(app.OWNER))
 async def eval_handler(_, message: types.Message):
     if len(message.command) < 2:
         return await message.reply_text("What?")
 
     code = message.text.split(None, 1)[1]
-    prefix, result = await run_eval(message, code)
+    out_buf = io.StringIO()
 
-    out = result.strip()
-    output = f"{prefix}<b>Output:</b>\n<pre language='python'>{escape(out)}</pre>"
+    async def _eval_code() -> Tuple[str, Optional[str]]:
+        async def send(*args: Any, **kwargs: Any) -> types.Message:
+            return await message.reply_text(*args, **kwargs)
 
-    if len(output) > 4096:
-        with io.BytesIO(out.encode()) as file:
-            file.name = f"{uuid.uuid4().hex[:8].upper()}.txt"
-            return await message.reply_document(document=file, disable_notification=True)
+        def _print(*args: Any, **kwargs: Any) -> None:
+            kwargs.setdefault("file", out_buf)
+            print(*args, **kwargs)
 
-    await message.reply_text(output)
+        eval_vars = {
+            "m": message,
+            "r": message.reply_to_message,
+            "app": app,
+            "client": app,
+            "chat": message.chat,
+            "user": message.from_user,
+            "asyncio": asyncio,
+            "sleep": asyncio.sleep,
+            "ikb": types.InlineKeyboardButton,
+            "ikm": types.InlineKeyboardMarkup,
+            "pyrogram": sys.modules["pyrogram"],
+            "send": send,
+            "print": _print,
+            "os": os,
+            "re": re,
+            "sys": sys,
+            "tb": traceback,
+            "traceback": traceback,
+        }
+        try:
+            result = await meval(code, globals(), **eval_vars)
+            return "", result
+        except Exception as ex:
+            tb = traceback.extract_tb(ex.__traceback__)
+            snippet_tb = next(
+                (i for i, f in enumerate(tb) if f.filename == "<string>"), -1
+            )
+            formatted_tb = format_exception(
+                ex, tb[snippet_tb:] if snippet_tb != -1 else tb
+            )
+            return "⚠️ Error executing snippet\n\n", formatted_tb
+
+    _, result = await _eval_code()
+
+    if result is not None or not out_buf.getvalue():
+        print(result, file=out_buf)
+
+    output = out_buf.getvalue().strip()
+    response = "<b>Output:</b>\n<code>{0}</code>".format(escape(output))
+
+    if len(response) > 4096:
+        with io.BytesIO(output.encode()) as out_file:
+            out_file.name = f"{uuid.uuid4().hex[:8].lower()}.txt"
+            return await message.reply_document(
+                document=out_file, disable_notification=True
+            )
+
+    await message.reply_text(response)
